@@ -1,0 +1,78 @@
+@{
+    // Role is published per-request by Program.cs middleware from OpenFGA (Context.Items["Role"]).
+    var userName = User?.Identity?.Name;
+    var isSignedIn = !string.IsNullOrEmpty(userName);
+    var role = (Context.Items["Role"] as string)?.ToLowerInvariant();
+    var initial = isSignedIn ? userName![..1].ToUpperInvariant() : "?";
+    var mainClass = ViewData["Wide"] is true ? "site-main site-main--wide" : "site-main";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(ViewData["Title"] != null ? ViewData["Title"] + " · Trailhead" : "Trailhead")</title>
+    <link rel="stylesheet" href="~/site.css" />
+</head>
+<body>
+    <header class="site-header">
+        <div class="site-header__inner">
+            <a class="brand" href="/">
+                <span class="brand__mark" aria-hidden="true"></span>
+                Trailhead
+            </a>
+
+            <nav class="nav" aria-label="Primary">
+                <a class="nav__link" href="/">Home</a>
+                <a class="nav__link" href="/Admin/Access">Admin</a>
+            </nav>
+
+            @if (isSignedIn)
+            {
+                <div class="user-area">
+                    <div class="user-badge" title="Signed in as @userName (@(role ?? "no role"))">
+                        <span class="user-badge__avatar" aria-hidden="true">@initial</span>
+                        <span class="user-badge__meta">
+                            <span class="user-badge__label">Signed in as</span>
+                            <span class="user-badge__name">@userName</span>
+                        </span>
+                        @if (role is not null)
+                        {
+                            <span class="role-pill" data-role="@role">@role</span>
+                        }
+                    </div>
+                    <form method="post" action="/logout">
+                        <button type="submit" class="btn btn--secondary btn--sm">Sign out</button>
+                    </form>
+                </div>
+            }
+            else
+            {
+                <div class="user-area">
+                    <div class="user-badge user-badge--guest">
+                        <span class="user-badge__avatar" aria-hidden="true">?</span>
+                        <span class="user-badge__meta">
+                            <span class="user-badge__label">Not signed in</span>
+                            <span class="user-badge__name">Guest</span>
+                        </span>
+                    </div>
+                    <a class="btn btn--secondary btn--sm" href="/Login">Sign in</a>
+                </div>
+            }
+        </div>
+    </header>
+
+    <main class="@mainClass">
+        @RenderBody()
+    </main>
+
+    <footer class="site-footer">
+        <div class="site-footer__inner">
+            <span>Trailhead — a community trail journal.</span>
+            <span class="muted">OpenFGA authorization demo</span>
+        </div>
+    </footer>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

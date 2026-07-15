@@ -1,0 +1,37 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="btn-row" style="justify-content: space-between; margin-bottom: var(--s-5);">
+    <h1 class="page-title" style="margin-bottom: 0;">Trail journal</h1>
+    @if (Model.CanCreatePost)
+    {
+        <a class="btn btn--primary" href="/Posts/Create">New post</a>
+    }
+</div>
+
+@if (Model.Posts.Count == 0)
+{
+    <p class="muted">No posts yet.</p>
+}
+else
+{
+    <div class="post-list">
+        @foreach (var post in Model.Posts)
+        {
+            <article class="post-card">
+                <h2 class="post-card__title">
+                    <a href="/Posts/Details?id=@post.Id">@post.Title</a>
+                </h2>
+                <div class="post-card__meta">
+                    <span>@post.AuthorUsername</span>
+                    <span class="dot">&middot;</span>
+                    <span>@post.CreatedAt.ToLocalTime().ToString("MMM d, yyyy")</span>
+                </div>
+                <p class="post-card__excerpt">@post.Body</p>
+            </article>
+        }
+    </div>
+}

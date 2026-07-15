@@ -1,0 +1,109 @@
+@page
+@model AccessModel
+@{
+    ViewData["Title"] = "Access";
+    ViewData["Wide"] = true;
+}
+
+<h1 class="page-title">Access management</h1>
+<p class="muted" style="margin-top: 0;">
+    Toggle a role to grant or revoke it instantly. Checkboxes show <strong>directly granted</strong>
+    roles; because roles are nested (admin ⊃ editor ⊃ writer ⊃ reader), the effective access also
+    includes every lower role.
+</p>
+
+<div id="access-flash" role="status" hidden style="margin-bottom: var(--s-4);"></div>
+
+<div class="table-wrap">
+    <table class="table access-matrix">
+        <thead>
+            <tr>
+                <th>User</th>
+                @foreach (var role in Model.Roles)
+                {
+                    <th>@role</th>
+                }
+                <th>Effective</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in Model.Rows)
+            {
+                var effective = Model.EffectiveRole(row);
+                <tr>
+                    <td>@row.Username</td>
+                    @foreach (var role in Model.Roles)
+                    {
+                        // An admin can't revoke their own admin here — it would lock them out.
+                        var lockSelf = role == "admin" && row.Username == Model.CurrentUser;
+                        <td>
+                            <label class="toggle" title="@(lockSelf ? "You can't revoke your own admin" : $"{role} for {row.Username}")">
+                                <input type="checkbox" class="access-toggle"
+                                       data-username="@row.Username" data-role="@role"
+                                       checked="@row.DirectRoles.Contains(role)" disabled="@lockSelf" />
+                                <span class="toggle__track"></span>
+                            </label>
+                        </td>
+                    }
+                    <td>
+                        <span class="role-pill effective-pill" data-role="@effective" hidden="@(effective is null)">@effective</span>
+                        <span class="muted effective-none" hidden="@(effective is not null)">none</span>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+<script>
+    const ROLES = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Roles));
+    const flash = document.getElementById("access-flash");
+
+    function showFlash(message, kind) {
+        flash.textContent = message;
+        flash.className = "alert alert--" + kind;
+        flash.hidden = false;
+    }
+
+    // Recompute a row's effective role from its currently-checked toggles.
+    function updateEffective(rowEl) {
+        const checked = [...rowEl.querySelectorAll(".access-toggle:checked")].map(cb => cb.dataset.role);
+        const effective = ROLES.find(r => checked.includes(r)) ?? null;
+        const pill = rowEl.querySelector(".effective-pill");
+        const none = rowEl.querySelector(".effective-none");
+        if (effective) {
+            pill.textContent = effective;
+            pill.dataset.role = effective;
+            pill.hidden = false;
+            none.hidden = true;
+        } else {
+            pill.hidden = true;
+            none.hidden = false;
+        }
+    }
+
+    document.querySelectorAll(".access-toggle").forEach(cb => {
+        cb.addEventListener("change", async () => {
+            const { username, role } = cb.dataset;
+            const grant = cb.checked;
+            cb.disabled = true;
+            try {
+                const res = await fetch(`/admin/access/${grant ? "grant" : "revoke"}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: new URLSearchParams({ username, role }),
+                });
+                if (!res.ok) throw new Error(res.status);
+                updateEffective(cb.closest("tr"));
+                showFlash(`${grant ? "Granted" : "Revoked"} ${role} for ${username}.`, "success");
+            } catch {
+                cb.checked = !grant;
+                showFlash(`Could not update ${role} for ${username}.`, "danger");
+            } finally {
+                cb.disabled = false;
+            }
+        });
+    });
+</script>
+}

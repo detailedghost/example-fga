@@ -1,0 +1,48 @@
+@page
+@model LoginModel
+@{
+    ViewData["Title"] = "Sign in";
+}
+
+<h1 class="page-title">Sign in</h1>
+
+@if (Model.ShowError)
+{
+    <div class="alert alert--danger" role="alert">
+        <span class="alert__icon" aria-hidden="true">!</span>
+        <span>Invalid username or password.</span>
+    </div>
+}
+
+<form method="post" action="/login" class="form form--card">
+    <div class="field">
+        <label class="field__label" for="username">Username</label>
+        <input class="input" type="text" id="username" name="username" autocomplete="username" required />
+    </div>
+    <div class="field">
+        <label class="field__label" for="password">Password</label>
+        <input class="input" type="password" id="password" name="password" autocomplete="current-password" required />
+    </div>
+    <button type="submit" class="btn btn--primary">Sign in</button>
+</form>
+
+<h2 class="page-title" style="margin-top: var(--s-7);">Demo accounts</h2>
+<p class="muted">Password is the same as the username for every demo account.</p>
+
+<div class="table-wrap">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Role</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>alice</td><td><span class="role-pill" data-role="admin">admin</span></td></tr>
+            <tr><td>bob</td><td><span class="role-pill" data-role="editor">editor</span></td></tr>
+            <tr><td>carol</td><td><span class="role-pill" data-role="writer">writer</span></td></tr>
+            <tr><td>dave</td><td><span class="role-pill" data-role="reader">reader</span></td></tr>
+            <tr><td>erin</td><td><span class="role-pill" data-role="writer">writer</span></td></tr>
+        </tbody>
+    </table>
+</div>

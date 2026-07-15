@@ -1,0 +1,36 @@
+@page
+@model DetailsModel
+@{
+    ViewData["Title"] = Model.Post.Title;
+}
+
+<article class="post">
+    <header class="post__header">
+        <h1>@Model.Post.Title</h1>
+        <div class="post__meta">
+            <span>@Model.Post.AuthorUsername</span>
+            <span class="dot">&middot;</span>
+            <span>@Model.Post.CreatedAt.ToLocalTime().ToString("MMM d, yyyy 'at' h:mm tt")</span>
+        </div>
+    </header>
+
+    <div class="post__body">
+        <p>@Model.Post.Body</p>
+    </div>
+
+    @if (Model.CanEdit || Model.CanDelete)
+    {
+        <div class="post__actions btn-row">
+            @if (Model.CanEdit)
+            {
+                <a class="btn btn--secondary" href="/Posts/Edit?id=@Model.Post.Id">Edit</a>
+            }
+            @if (Model.CanDelete)
+            {
+                <form method="post" action="/posts/@Model.Post.Id/delete">
+                    <button type="submit" class="btn btn--danger">Delete</button>
+                </form>
+            }
+        </div>
+    }
+</article>

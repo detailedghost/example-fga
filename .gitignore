@@ -1,0 +1,8 @@
+# Build output
+bin/
+obj/
+*.user
+.vs/
+
+# NOTE: .env IS committed on purpose — this is a dummy local demo with fake
+# credentials only. Never do this in a real project.

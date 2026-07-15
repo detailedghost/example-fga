@@ -1,0 +1,22 @@
+@page
+@model CreateModel
+@{
+    ViewData["Title"] = "New post";
+}
+
+<h1 class="page-title">New post</h1>
+
+<form method="post" action="/posts/" class="form form--card">
+    <div class="field">
+        <label class="field__label" for="title">Title</label>
+        <input class="input" type="text" id="title" name="title" required />
+    </div>
+    <div class="field">
+        <label class="field__label" for="body">Body</label>
+        <textarea class="textarea" id="body" name="body" required></textarea>
+    </div>
+    <div class="btn-row">
+        <button type="submit" class="btn btn--primary">Publish</button>
+        <a class="btn btn--secondary" href="/">Cancel</a>
+    </div>
+</form>

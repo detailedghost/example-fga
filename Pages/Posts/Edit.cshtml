@@ -1,0 +1,22 @@
+@page
+@model EditModel
+@{
+    ViewData["Title"] = "Edit post";
+}
+
+<h1 class="page-title">Edit post</h1>
+
+<form method="post" action="/posts/@Model.Post.Id/edit" class="form form--card">
+    <div class="field">
+        <label class="field__label" for="title">Title</label>
+        <input class="input" type="text" id="title" name="title" value="@Model.Post.Title" required />
+    </div>
+    <div class="field">
+        <label class="field__label" for="body">Body</label>
+        <textarea class="textarea" id="body" name="body" required>@Model.Post.Body</textarea>
+    </div>
+    <div class="btn-row">
+        <button type="submit" class="btn btn--primary">Save</button>
+        <a class="btn btn--secondary" href="/Posts/Details?id=@Model.Post.Id">Cancel</a>
+    </div>
+</form>
