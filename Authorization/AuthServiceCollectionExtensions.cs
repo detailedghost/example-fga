@@ -6,13 +6,14 @@ namespace FgaPoc.Authorization;
 
 file static class RedirectHelpers
 {
-    // /api requests are called by the JS frontend, which wants a status code, not an HTML redirect.
+    // JSON callers (the JS frontend) want a status code; browsers hitting pages want the redirect.
     public static Task ApiAwareStatus(
         RedirectContext<CookieAuthenticationOptions> ctx,
         int apiStatusCode
     )
     {
-        if (ctx.Request.Path.StartsWithSegments("/api"))
+        var path = ctx.Request.Path;
+        if (path.StartsWithSegments("/api") || path.StartsWithSegments("/mvc"))
             ctx.Response.StatusCode = apiStatusCode;
         else
             ctx.Response.Redirect(ctx.RedirectUri);

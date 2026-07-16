@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>What you can do · Trailhead</title>
+        <link rel="stylesheet" href="/site.css" />
+    </head>
+    <body>
+        <main class="site-main">
+            <h1 class="page-title">What you can do</h1>
+            <p class="muted">
+                A pure-JS frontend that enables or disables each action based on your current user's
+                OpenFGA permissions, fetched from <code>GET /mvc/me</code>. Sign in as different demo
+                users (dave, carol, bob, alice) to watch the buttons switch on and off — locked ones
+                (🔒) name the role you'd need. Any authenticated user can open this page.
+            </p>
+            <div id="actions"></div>
+        </main>
+        <script src="/permissions.js" defer></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", () => renderPermissionBar("actions"));
+        </script>
+    </body>
+</html>

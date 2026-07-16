@@ -6,6 +6,16 @@ namespace FgaPoc.Fga;
 /// <summary>A blog-level role assignment read back from OpenFGA (e.g. carol → writer).</summary>
 public sealed record RoleAssignment(string Username, string Role);
 
+/// <summary>Permission identifiers in "action:resource" form — what the API hands the frontend.</summary>
+public static class Permissions
+{
+    public const string ReadPosts = "read:posts";
+    public const string CreatePosts = "create:posts";
+    public const string EditPosts = "edit:posts";
+    public const string DeletePosts = "delete:posts";
+    public const string ManageAccess = "manage:access";
+}
+
 /// <summary>
 /// Thin wrapper over <see cref="OpenFgaClient"/> expressing the Trailhead permission
 /// questions in the app's own vocabulary. All authorization decisions flow through here.
@@ -29,6 +39,37 @@ public sealed class FgaService(OpenFgaClient client)
         string role,
         CancellationToken ct = default
     ) => CheckAsync(User(username), role, BlogObject, ct);
+
+    /// <summary>
+    /// The "action:resource" permissions the user currently holds, resolved from OpenFGA — the API
+    /// returns this list and the frontend just checks membership. "edit/delete:posts" map to the
+    /// editor role, since editors (and admins) act on every post regardless of ownership.
+    /// </summary>
+    public async Task<IReadOnlyList<string>> GetPermissionsAsync(
+        string username,
+        CancellationToken ct = default
+    )
+    {
+        var reader = HasBlogRoleAsync(username, "reader", ct);
+        var writer = HasBlogRoleAsync(username, "writer", ct);
+        var editor = HasBlogRoleAsync(username, "editor", ct);
+        var admin = HasBlogRoleAsync(username, "admin", ct);
+        await Task.WhenAll(reader, writer, editor, admin);
+
+        var permissions = new List<string>();
+        if (reader.Result)
+            permissions.Add(Permissions.ReadPosts);
+        if (writer.Result)
+            permissions.Add(Permissions.CreatePosts);
+        if (editor.Result)
+        {
+            permissions.Add(Permissions.EditPosts);
+            permissions.Add(Permissions.DeletePosts);
+        }
+        if (admin.Result)
+            permissions.Add(Permissions.ManageAccess);
+        return permissions;
+    }
 
     public Task<bool> CanReadPostAsync(
         string username,

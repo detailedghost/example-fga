@@ -70,7 +70,7 @@ async function onToggle(event) {
 	const grant = toggle.checked;
 	toggle.disabled = true;
 	try {
-		const res = await fetch(`/admin/access/${grant ? "grant" : "revoke"}`, {
+		const res = await fetch(`/api/access/${grant ? "grant" : "revoke"}`, {
 			method: "POST",
 			headers: { "Content-Type": "application/x-www-form-urlencoded" },
 			body: new URLSearchParams({ username, role }),

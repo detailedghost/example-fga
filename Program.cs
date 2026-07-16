@@ -33,6 +33,8 @@ builder.Services.AddBlogData();
 builder.Services.AddFga();
 builder.Services.AddAppAuth();
 
+builder.Services.AddControllers(); // MVC controllers under /mvc/* (alongside the minimal APIs under /api/*)
+
 builder.Services.AddRazorPages(options =>
 {
     options.Conventions.AuthorizeFolder("/");
@@ -63,9 +65,11 @@ app.Use(
 );
 
 app.MapRazorPages();
+app.MapControllers();
 app.MapAuthEndpoints();
 app.MapPostEndpoints();
 app.MapAccessEndpoints();
+app.MapMeEndpoints();
 app.MapGet("/healthz", () => Results.Ok("ok")).AllowAnonymous();
 
 app.Run();

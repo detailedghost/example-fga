@@ -72,17 +72,38 @@ ASP.NET Core owns identity (cookie auth) and the policy gate; every
 authorization decision is delegated to an OpenFGA `Check`. Admins manage
 roles at `/Admin/Access`, which writes/deletes tuples live.
 
-## Frontend example (pure JS)
+## Frontend examples (pure JS)
 
-To show the same authorization from a framework-free frontend, `/access.html`
-is a static page (plain HTML + vanilla JS, no Razor, no build step) that renders
-the role matrix and flips roles on/off. It reads state from `GET /api/access` and
-toggles via the same `/admin/access/grant` and `/revoke` endpoints — so changes
-appear in the server-rendered `/Admin/Access` page too, since both hit the same
-OpenFGA store. The roles list is fed from the API, not hardcoded, and `/api/*`
-endpoints return `401`/`403` for the frontend rather than redirecting to login.
+Two framework-free static pages (plain HTML + vanilla JS, no Razor, no build step)
+show the same OpenFGA authorization from the browser:
 
-Sign in as an admin (`alice`), then open <http://localhost:5080/access.html>.
+- **`/access.html`** — the role matrix; flips roles on/off via `GET /api/access`
+  and `POST /api/access/{grant,revoke}`. Changes appear in the server-rendered
+  `/Admin/Access` page too, since both hit the same store. The roles list is fed
+  from the API, not hardcoded. (Admin only.)
+- **`/actions.html`** — a row of action buttons enabled/disabled by *your* current
+  permissions. It reads `GET /mvc/me`, which returns the permissions you hold as
+  `"action:resource"` strings (e.g. `create:posts`, `manage:access`); the frontend
+  just checks membership with a small `can(permissions, "action:resource")` helper.
+  Sign in as dave/carol/bob/alice to watch the buttons switch. (Any signed-in user.)
+
+`/api/*` and `/mvc/*` endpoints return `401`/`403` for the frontend rather than
+redirecting to the login page.
+
+### API: minimal API and MVC, side by side
+
+The JSON API is implemented twice on purpose, as a reference for both styles:
+
+| Surface | Minimal API (`Endpoints/`) | MVC controller (`Controllers/`) |
+| --- | --- | --- |
+| Role matrix + grant/revoke | `/api/access…` | `/mvc/access…` |
+| Current-user permissions | `/api/me` | `/mvc/me` |
+
+Both return identical responses. The role → permission mapping lives only in
+the API (`FgaService.GetPermissionsAsync`); the frontend never hardcodes it.
+
+Sign in as an admin (`alice`), then open <http://localhost:5080/access.html> or
+<http://localhost:5080/actions.html>.
 
 ## Configuration
 

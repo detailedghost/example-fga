@@ -12,14 +12,21 @@
             <p class="muted">
                 This page is plain static HTML + vanilla JavaScript — no framework, no server rendering.
                 It reads the role matrix from <code>GET /api/access</code> and flips roles on/off by calling
-                the same <code>/admin/access/grant</code> and <code>/admin/access/revoke</code> endpoints,
-                all backed by OpenFGA. Changes here show up in the server-rendered
+                the same <code>/api/access/grant</code> and <code>/api/access/revoke</code> endpoints
+                (minimal API), all backed by OpenFGA. Changes here show up in the server-rendered
                 <a href="/Admin/Access">/Admin/Access</a> page too — same store. Sign in as an admin
                 (e.g. <strong>alice</strong>) to use it.
             </p>
+
+            <div id="actions" style="margin-bottom: var(--s-5);"></div>
+
             <div id="status" role="status" hidden></div>
             <div id="grid"></div>
         </main>
+        <script src="/permissions.js" defer></script>
         <script src="/access.js" defer></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", () => renderPermissionBar("actions"));
+        </script>
     </body>
 </html>
