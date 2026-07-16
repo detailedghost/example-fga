@@ -72,6 +72,18 @@ ASP.NET Core owns identity (cookie auth) and the policy gate; every
 authorization decision is delegated to an OpenFGA `Check`. Admins manage
 roles at `/Admin/Access`, which writes/deletes tuples live.
 
+## Frontend example (pure JS)
+
+To show the same authorization from a framework-free frontend, `/access.html`
+is a static page (plain HTML + vanilla JS, no Razor, no build step) that renders
+the role matrix and flips roles on/off. It reads state from `GET /api/access` and
+toggles via the same `/admin/access/grant` and `/revoke` endpoints — so changes
+appear in the server-rendered `/Admin/Access` page too, since both hit the same
+OpenFGA store. The roles list is fed from the API, not hardcoded, and `/api/*`
+endpoints return `401`/`403` for the frontend rather than redirecting to login.
+
+Sign in as an admin (`alice`), then open <http://localhost:5080/access.html>.
+
 ## Configuration
 
 Everything is environment-driven via `.env`. The Postgres host port defaults to
