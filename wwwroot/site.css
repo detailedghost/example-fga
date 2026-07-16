@@ -605,6 +605,30 @@ hr { border: 0; border-top: 1px solid var(--border); margin: var(--s-6) 0; }
   .site-main { padding: var(--s-5) var(--s-4) var(--s-7); }
 }
 
+/* ---- Code sample card ------------------------------------- */
+.code-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface-2);
+  margin: var(--s-4) 0;
+}
+.code-card__name {
+  display: block;
+  padding: var(--s-2) var(--s-4);
+  font-family: var(--font-mono);
+  font-size: var(--f-xs);
+  color: var(--ink-faint);
+  background: color-mix(in srgb, var(--ink) 6%, var(--surface));
+  border-bottom: 1px solid var(--border);
+}
+.code-card pre {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
 /* ---- Access matrix (admin) -------------------------------- */
 .access-matrix th:not(:first-child),
 .access-matrix td:not(:first-child) { text-align: center; }

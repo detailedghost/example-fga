@@ -8,14 +8,47 @@
     </head>
     <body>
         <main class="site-main">
+            <p class="muted" style="margin-bottom: var(--s-2);">
+                <a href="/">← Back to Trailhead</a> · <a href="/access.html">Access matrix</a>
+            </p>
             <h1 class="page-title">What you can do</h1>
             <p class="muted">
                 A pure-JS frontend that enables or disables each action based on your current user's
                 OpenFGA permissions, fetched from <code>GET /mvc/me</code>. Sign in as different demo
                 users (dave, carol, bob, alice) to watch the buttons switch on and off — locked ones
-                (🔒) name the role you'd need. Any authenticated user can open this page.
+                (🔒) name the permission you'd need. Any authenticated user can open this page.
             </p>
             <div id="actions"></div>
+
+            <section style="margin-top: var(--s-7);">
+                <h2>How it works</h2>
+                <p class="muted">
+                    The API returns the permissions you hold as <code>"action:resource"</code> strings.
+                    The frontend hardcodes no roles — it just checks membership with a one-line helper.
+                </p>
+
+                <div class="code-card">
+                    <span class="code-card__name">GET /mvc/me → response</span>
+                    <pre><code>{
+  "user": "carol",
+  "permissions": ["read:posts", "create:posts"]
+}</code></pre>
+                </div>
+
+                <div class="code-card">
+                    <span class="code-card__name">wwwroot/permissions.js</span>
+                    <pre><code>// 1. Ask the API which permissions the current user holds
+const res = await fetch("/mvc/me");
+const { permissions } = await res.json();
+
+// 2. A generic helper — no roles baked into the frontend
+const can = (perms, p) => perms.includes(p);
+
+// 3. Turn UI on/off by permission
+newPostButton.disabled = !can(permissions, "create:posts");
+adminLink.hidden       = !can(permissions, "manage:access");</code></pre>
+                </div>
+            </section>
         </main>
         <script src="/permissions.js" defer></script>
         <script>
