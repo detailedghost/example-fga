@@ -20,7 +20,9 @@ services:
 
   # One-shot: creates/upgrades OpenFGA's tables in the shared `blog` database, then exits.
   openfga-migrate:
-    image: openfga/openfga:latest
+    # Pinned: newer releases deprecated the Playground and bind it to container
+    # loopback, so it can't be published. v1.8.0 serves it on 0.0.0.0:3000.
+    image: openfga/openfga:v1.8.0
     command: migrate
     environment:
       OPENFGA_DATASTORE_ENGINE: postgres
@@ -30,8 +32,28 @@ services:
         condition: service_healthy
     restart: 'no'
 
+  # Applies db/postgres/V*.sql (schema + seed) to the blog database. Idempotent via
+  # Flyway's schema-history table; baseline-on-migrate tolerates OpenFGA's own tables.
+  flyway:
+    image: flyway/flyway:10-alpine
+    command: migrate
+    environment:
+      FLYWAY_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      FLYWAY_USER: ${POSTGRES_USER}
+      FLYWAY_PASSWORD: ${POSTGRES_PASSWORD}
+      FLYWAY_BASELINE_ON_MIGRATE: 'true'
+      # Baseline at 0 so V1 still applies when OpenFGA's migrate has already populated the schema.
+      FLYWAY_BASELINE_VERSION: '0'
+      FLYWAY_CONNECT_RETRIES: '10'
+    volumes:
+      - ./db/postgres:/flyway/sql:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: 'no'
+
   openfga:
-    image: openfga/openfga:latest
+    image: openfga/openfga:v1.8.0
     command: run
     environment:
       OPENFGA_DATASTORE_ENGINE: postgres
@@ -46,13 +68,26 @@ services:
     healthcheck:
       test:
         - CMD
-        - wget
-        - --spider
-        - -q
-        - http://localhost:8080/healthz
+        - /usr/local/bin/grpc_health_probe
+        - -addr=localhost:8081
       interval: 5s
       timeout: 5s
       retries: 10
+
+  # FGA "migration": provisions the store from db/fga (model.dsl + tuples.json) via the
+  # OpenFGA REST API. Idempotent — drops any prior same-named store, then recreates it.
+  fga-migrate:
+    image: oven/bun:1
+    command: run /db/fga/migrate.ts
+    environment:
+      FGA_API_URL: http://openfga:8080
+      FGA_STORE_NAME: ${FGA_STORE_NAME}
+    volumes:
+      - ./db/fga:/db/fga:ro
+    depends_on:
+      openfga:
+        condition: service_healthy
+    restart: 'no'
 
 volumes:
   postgres-data:

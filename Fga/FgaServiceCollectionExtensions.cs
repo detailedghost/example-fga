@@ -5,7 +5,7 @@ namespace FgaPoc.Fga;
 
 public static class FgaServiceCollectionExtensions
 {
-    /// <summary>Registers the OpenFGA client, the permission service, and the startup bootstrapper.</summary>
+    /// <summary>Registers the OpenFGA client, the permission service, and the startup store resolver.</summary>
     public static IServiceCollection AddFga(this IServiceCollection services)
     {
         services.AddSingleton(sp =>
@@ -14,7 +14,7 @@ public static class FgaServiceCollectionExtensions
             return new OpenFgaClient(new ClientConfiguration { ApiUrl = options.ApiUrl });
         });
         services.AddSingleton<FgaService>();
-        services.AddSingleton<FgaBootstrapper>();
+        services.AddSingleton<FgaStoreResolver>();
         return services;
     }
 }

@@ -22,8 +22,8 @@ All configuration lives in `.env` at the project root — there is no
 `appsettings.json`. Nothing else to edit.
 
 ```bash
-docker compose up -d
-dotnet run
+docker compose up -d   # provisions Postgres + the OpenFGA store (see Bootstrap)
+dotnet run             # the app only resolves the store; it doesn't provision it
 ```
 
 Or, to do both and wait for OpenFGA to be ready first:
@@ -32,13 +32,52 @@ Or, to do both and wait for OpenFGA to be ready first:
 ./run.sh
 ```
 
+Start `docker compose up` before `dotnet run`. Re-running `docker compose up`
+while the app runs gives the FGA store a new id, so restart `dotnet run`
+afterward to pick it up.
+
+## Bootstrap (the `db/` folder)
+
+Provisioning is declarative and lives outside the app, in `db/`:
+
+| Path | Purpose |
+| --- | --- |
+| `db/postgres/V*.sql` | schema + seed, applied by Flyway |
+| `db/fga/model.dsl` | authorization model (DSL) |
+| `db/fga/seed.json` | seed tuples |
+| `db/fga/migrate.ts` | Bun migration that loads the two files via the API |
+
+On `docker compose up`: Flyway applies the SQL migrations (idempotent via its
+schema-history table), then the `fga-migrate` service runs `db/fga/migrate.ts`
+(a Bun script in an `oven/bun` container) — it drops any prior same-named store
+and recreates it fresh from `model.dsl` + `tuples.json`. The app then resolves
+the store by name at startup (read-only) — no schema creation or tuple seeding
+in app code.
+
 ## URLs
 
 | Service | URL |
 | --- | --- |
 | Blog app | <http://localhost:5080> |
 | OpenFGA API | <http://localhost:8080> |
-| OpenFGA Playground | <http://localhost:3000> |
+| OpenFGA Playground | <http://localhost:3000/playground> |
+
+The Playground is a web UI for browsing the store's model and tuples. Newer
+OpenFGA releases deprecated it and bind it to container loopback (unpublishable),
+so `docker-compose.yml` pins `openfga/openfga:v1.8.0`, which serves it on
+`0.0.0.0:3000`.
+
+## Viewing the FGA store
+
+Besides the Playground, a small script prints the dummy store — its model
+relations and every tuple — straight from the API:
+
+```bash
+bun run scripts/fga-view.ts
+```
+
+It shows the store, the authorization model's types/relations, and all tuples
+grouped by object (role grants on `blog:main`, per-post `owner` links).
 
 ## Users
 
@@ -58,8 +97,8 @@ can edit/delete only their own posts, while editors and admins act on any post.
 ## Roles & permissions
 
 Roles are nested (admin ⊃ editor ⊃ writer ⊃ reader) and modeled as OpenFGA
-relations. The authorization model is built in C# (`Fga/FgaModel.cs`); a
-human-readable DSL mirror lives in `fga/model.fga`.
+relations. The authorization model lives in `db/fga/model.dsl` (DSL) and loads
+into the store at startup via the Bun migration (`db/fga/migrate.ts`).
 
 | Role | Read | New | Edit own | Edit any | Del own | Del any | Manage |
 | --- | :-: | :-: | :-: | :-: | :-: | :-: | :-: |

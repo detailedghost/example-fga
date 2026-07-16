@@ -4,24 +4,6 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace FgaPoc.Authorization;
 
-file static class RedirectHelpers
-{
-    // JSON callers (the JS frontend) want a status code; browsers hitting pages want the redirect.
-    public static Task ApiAwareStatus(
-        RedirectContext<CookieAuthenticationOptions> ctx,
-        int apiStatusCode
-    )
-    {
-        var path = ctx.Request.Path;
-        if (path.StartsWithSegments("/api") || path.StartsWithSegments("/mvc"))
-            ctx.Response.StatusCode = apiStatusCode;
-        else
-            ctx.Response.Redirect(ctx.RedirectUri);
-
-        return Task.CompletedTask;
-    }
-}
-
 public static class AuthServiceCollectionExtensions
 {
     /// <summary>
@@ -38,11 +20,11 @@ public static class AuthServiceCollectionExtensions
             {
                 options.LoginPath = "/Login";
                 options.AccessDeniedPath = "/Forbidden";
-                // Pages get redirected to login; /api callers (the JS frontend) get a status code.
+                // Pages get redirected to login; /api and /mvc callers (the JS frontend) get a status code.
                 options.Events.OnRedirectToLogin = ctx =>
-                    RedirectHelpers.ApiAwareStatus(ctx, StatusCodes.Status401Unauthorized);
+                    RespondForFrontend(ctx, StatusCodes.Status401Unauthorized);
                 options.Events.OnRedirectToAccessDenied = ctx =>
-                    RedirectHelpers.ApiAwareStatus(ctx, StatusCodes.Status403Forbidden);
+                    RespondForFrontend(ctx, StatusCodes.Status403Forbidden);
             });
 
         services.AddSingleton<IAuthorizationHandler, CanCreatePostHandler>();
@@ -67,5 +49,22 @@ public static class AuthServiceCollectionExtensions
             );
 
         return services;
+    }
+
+    // Pages get redirected to login; /api and /mvc callers (the JS frontend) get a status code.
+    private static Task RespondForFrontend(
+        RedirectContext<CookieAuthenticationOptions> ctx,
+        int apiStatusCode
+    )
+    {
+        var path = ctx.Request.Path;
+        if (path.StartsWithSegments("/api") || path.StartsWithSegments("/mvc"))
+        {
+            ctx.Response.StatusCode = apiStatusCode;
+            return Task.CompletedTask;
+        }
+
+        ctx.Response.Redirect(ctx.RedirectUri);
+        return Task.CompletedTask;
     }
 }

@@ -1,7 +1,3 @@
-# Trailhead authorization model — DOCUMENTATION ONLY.
-# The runtime model is built in C# (Fga/FgaModel.cs) from the SDK objects;
-# this DSL is the human-readable mirror kept in sync by hand.
-
 model
   schema 1.1
 

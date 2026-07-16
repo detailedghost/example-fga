@@ -1,0 +1,11 @@
+[
+	{ "user": "user:alice", "relation": "admin", "object": "blog:main" },
+	{ "user": "user:bob", "relation": "editor", "object": "blog:main" },
+	{ "user": "user:carol", "relation": "writer", "object": "blog:main" },
+	{ "user": "user:dave", "relation": "reader", "object": "blog:main" },
+	{ "user": "user:erin", "relation": "writer", "object": "blog:main" },
+	{ "user": "blog:main", "relation": "blog", "object": "post:1" },
+	{ "user": "user:carol", "relation": "owner", "object": "post:1" },
+	{ "user": "blog:main", "relation": "blog", "object": "post:2" },
+	{ "user": "user:erin", "relation": "owner", "object": "post:2" }
+]

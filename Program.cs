@@ -44,9 +44,9 @@ builder.Services.AddRazorPages(options =>
 
 var app = builder.Build();
 
-// Prepare the database, then the OpenFGA store — both idempotent on every startup.
-await app.Services.GetRequiredService<DbInitializer>().InitializeAsync();
-await app.Services.GetRequiredService<FgaBootstrapper>().InitializeAsync();
+// Database schema/seed and the OpenFGA store are provisioned by docker-compose (Flyway +
+// db/fga); the app only resolves which store to talk to.
+await app.Services.GetRequiredService<FgaStoreResolver>().ResolveAsync();
 
 app.UseStaticFiles();
 app.UseAuthentication();
