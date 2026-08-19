@@ -1,4 +1,4 @@
-using FgaPoc.Fga;
+using FgaPoc.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,7 +11,7 @@ namespace FgaPoc.Controllers;
 [ApiController]
 [Route("mvc/me")]
 [Authorize]
-public sealed class MeController(FgaService fga) : ControllerBase
+public sealed class MeController(IPermissionService permissions) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> Get(CancellationToken ct)
@@ -21,7 +21,12 @@ public sealed class MeController(FgaService fga) : ControllerBase
             return Unauthorized();
 
         return Ok(
-            new { user = username, permissions = await fga.GetPermissionsAsync(username, ct) }
+            new
+            {
+                user = username,
+                provider = permissions.ProviderId,
+                permissions = await permissions.GetPermissionsAsync(username, ct),
+            }
         );
     }
 }

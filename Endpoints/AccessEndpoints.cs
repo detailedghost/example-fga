@@ -1,6 +1,5 @@
 using FgaPoc.Authorization;
 using FgaPoc.Data;
-using FgaPoc.Fga;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FgaPoc.Endpoints;
@@ -20,9 +19,9 @@ public static class AccessEndpoints
 
         group.MapGet(
             "",
-            async (UserRepository users, FgaService fga, HttpContext http) =>
+            async (UserRepository users, IPermissionService permissions, HttpContext http) =>
             {
-                var directRolesByUser = (await fga.ReadRoleAssignmentsAsync())
+                var directRolesByUser = (await permissions.ReadRoleAssignmentsAsync())
                     .GroupBy(a => a.Username)
                     .ToDictionary(g => g.Key, g => g.Select(a => a.Role).ToArray());
 
@@ -31,7 +30,8 @@ public static class AccessEndpoints
                     new
                     {
                         currentUser = http.User.Identity?.Name,
-                        roles = FgaService.Roles,
+                        provider = permissions.ProviderId,
+                        roles = BlogAuthorizationModel.Roles,
                         users = all.Select(u => new
                         {
                             username = u.Username,
@@ -46,18 +46,26 @@ public static class AccessEndpoints
         // Toggled via fetch, so return 204 rather than a redirect.
         group.MapPost(
             "/grant",
-            async ([FromForm] string username, [FromForm] string role, FgaService fga) =>
+            async (
+                [FromForm] string username,
+                [FromForm] string role,
+                IPermissionService permissions
+            ) =>
             {
-                await fga.GrantRoleAsync(username, role);
+                await permissions.GrantRoleAsync(username, role);
                 return Results.NoContent();
             }
         );
 
         group.MapPost(
             "/revoke",
-            async ([FromForm] string username, [FromForm] string role, FgaService fga) =>
+            async (
+                [FromForm] string username,
+                [FromForm] string role,
+                IPermissionService permissions
+            ) =>
             {
-                await fga.RevokeRoleAsync(username, role);
+                await permissions.RevokeRoleAsync(username, role);
                 return Results.NoContent();
             }
         );

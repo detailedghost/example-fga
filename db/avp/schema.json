@@ -1,0 +1,95 @@
+{
+	"Trailhead": {
+		"entityTypes": {
+			"User": {
+				"shape": {
+					"type": "Record",
+					"attributes": {}
+				}
+			},
+			"Blog": {
+				"shape": {
+					"type": "Record",
+					"attributes": {}
+				}
+			},
+			"Post": {
+				"memberOfTypes": ["Blog"],
+				"shape": {
+					"type": "Record",
+					"attributes": {
+						"owner": {
+							"type": "Entity",
+							"name": "User",
+							"required": true
+						}
+					}
+				}
+			}
+		},
+		"actions": {
+			"reader": {
+				"memberOf": [{ "id": "writer" }],
+				"appliesTo": {
+					"principalTypes": [],
+					"resourceTypes": []
+				}
+			},
+			"writer": {
+				"memberOf": [{ "id": "editor" }],
+				"appliesTo": {
+					"principalTypes": [],
+					"resourceTypes": []
+				}
+			},
+			"editor": {
+				"memberOf": [{ "id": "admin" }],
+				"appliesTo": {
+					"principalTypes": [],
+					"resourceTypes": []
+				}
+			},
+			"admin": {
+				"appliesTo": {
+					"principalTypes": [],
+					"resourceTypes": []
+				}
+			},
+			"readPost": {
+				"memberOf": [{ "id": "reader" }],
+				"appliesTo": {
+					"principalTypes": ["User"],
+					"resourceTypes": ["Post"]
+				}
+			},
+			"createPost": {
+				"memberOf": [{ "id": "writer" }],
+				"appliesTo": {
+					"principalTypes": ["User"],
+					"resourceTypes": ["Blog"]
+				}
+			},
+			"editPost": {
+				"memberOf": [{ "id": "editor" }],
+				"appliesTo": {
+					"principalTypes": ["User"],
+					"resourceTypes": ["Post"]
+				}
+			},
+			"deletePost": {
+				"memberOf": [{ "id": "editor" }],
+				"appliesTo": {
+					"principalTypes": ["User"],
+					"resourceTypes": ["Post"]
+				}
+			},
+			"manageAccess": {
+				"memberOf": [{ "id": "admin" }],
+				"appliesTo": {
+					"principalTypes": ["User"],
+					"resourceTypes": ["Blog"]
+				}
+			}
+		}
+	}
+}

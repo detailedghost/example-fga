@@ -13,10 +13,13 @@
                 This page is plain static HTML + vanilla JavaScript — no framework, no server rendering.
                 It reads the role matrix from <code>GET /api/access</code> and flips roles on/off by calling
                 the same <code>/api/access/grant</code> and <code>/api/access/revoke</code> endpoints
-                (minimal API), all backed by OpenFGA. Changes here show up in the server-rendered
-                <a href="/Admin/Access">/Admin/Access</a> page too — same store. Sign in as an admin
+                (minimal API), all backed by the selected authorization provider. Changes here show up
+                in the server-rendered <a href="/Admin/Access">/Admin/Access</a> page too — same store.
+                Sign in as an admin
                 (e.g. <strong>alice</strong>) to use it.
             </p>
+
+            <p id="provider" class="muted"></p>
 
             <div id="actions" style="margin-bottom: var(--s-5);"></div>
 

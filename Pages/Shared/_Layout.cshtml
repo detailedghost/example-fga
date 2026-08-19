@@ -1,9 +1,10 @@
 @{
-    // Role is published per-request by Program.cs middleware from OpenFGA (Context.Items["Role"]).
+    // Role and provider are published per-request by Program.cs middleware.
     var userName = User?.Identity?.Name;
     var isSignedIn = !string.IsNullOrEmpty(userName);
     var role = (Context.Items["Role"] as string)?.ToLowerInvariant();
     var initial = isSignedIn ? userName![..1].ToUpperInvariant() : "?";
+    var provider = Context.Items["AuthorizationProvider"] as string ?? "Authorization provider";
     var mainClass = ViewData["Wide"] is true ? "site-main site-main--wide" : "site-main";
 }
 <!DOCTYPE html>
@@ -70,7 +71,7 @@
     <footer class="site-footer">
         <div class="site-footer__inner">
             <span>Trailhead — a community trail journal.</span>
-            <span class="muted">OpenFGA authorization demo</span>
+            <span class="muted">@provider authorization demo</span>
         </div>
     </footer>
 

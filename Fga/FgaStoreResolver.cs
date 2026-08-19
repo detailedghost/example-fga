@@ -1,3 +1,4 @@
+using FgaPoc.Authorization;
 using FgaPoc.Options;
 using OpenFga.Sdk.Client;
 using OpenFga.Sdk.Client.Model;
@@ -13,9 +14,11 @@ public sealed class FgaStoreResolver(
     OpenFgaClient client,
     FgaOptions options,
     ILogger<FgaStoreResolver> logger
-)
+) : IPermissionProviderInitializer
 {
     private const int MaxAttempts = 15;
+
+    public Task InitializeAsync(CancellationToken ct = default) => ResolveAsync(ct);
 
     public async Task ResolveAsync(CancellationToken ct = default)
     {

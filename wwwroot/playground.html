@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>FGA Playground (local) · Trailhead</title>
+        <link rel="stylesheet" href="/site.css" />
+    </head>
+    <body>
+        <main class="site-main site-main--wide">
+            <h1 class="page-title">FGA Playground — local</h1>
+            <p class="muted">
+                The seeded store, read live from the OpenFGA API. This replaces the bundled
+                <code>:3000/playground</code>, which is an iframe of the hosted
+                <code>play.fga.dev</code> — a public HTTPS page, so Chrome's Private Network Access
+                policy blocks it from calling <code>127.0.0.1:8080</code> and it never sees your
+                store. This page is served from localhost, so that block doesn't apply.
+                It is available only when <code>AUTHORIZATION_PROVIDER=openfga</code>.
+                Sign in (e.g. <strong>alice</strong>) to load it.
+            </p>
+
+            <div id="status" role="status" hidden></div>
+
+            <section id="store"></section>
+            <section id="model"></section>
+            <section id="tuples"></section>
+            <section id="check"></section>
+        </main>
+        <script src="/playground.js" defer></script>
+    </body>
+</html>

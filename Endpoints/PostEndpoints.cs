@@ -1,14 +1,13 @@
 using FgaPoc.Authorization;
 using FgaPoc.Data;
-using FgaPoc.Fga;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FgaPoc.Endpoints;
 
 /// <summary>
-/// Blog post mutations. Every handler is thin: authorize, touch the repository + FGA, redirect.
-/// Create is a coarse policy (blog-level "writer"); edit/delete are per-post FGA resource checks.
+/// Blog post mutations. Every handler is thin: authorize, touch the repository + provider, redirect.
+/// Create is a coarse policy (blog-level "writer"); edit/delete are per-post resource checks.
 /// </summary>
 public static class PostEndpoints
 {
@@ -24,12 +23,12 @@ public static class PostEndpoints
                     [FromForm] string body,
                     HttpContext http,
                     PostRepository posts,
-                    FgaService fga
+                    IPermissionService permissions
                 ) =>
                 {
                     var author = http.User.Identity!.Name!;
                     var id = await posts.CreateAsync(title, body, author);
-                    await fga.LinkNewPostAsync(id, author);
+                    await permissions.LinkNewPostAsync(id, author);
                     return Results.Redirect($"/Posts/Details?id={id}");
                 }
             )
@@ -63,7 +62,7 @@ public static class PostEndpoints
                 int id,
                 HttpContext http,
                 PostRepository posts,
-                FgaService fga,
+                IPermissionService permissions,
                 IAuthorizationService authz
             ) =>
             {
@@ -74,7 +73,7 @@ public static class PostEndpoints
                     return Results.Forbid();
 
                 await posts.DeleteAsync(id);
-                await fga.UnlinkPostAsync(id, post.AuthorUsername);
+                await permissions.UnlinkPostAsync(id, post.AuthorUsername);
                 return Results.Redirect("/");
             }
         );

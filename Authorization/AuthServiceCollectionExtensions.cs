@@ -7,8 +7,8 @@ namespace FgaPoc.Authorization;
 public static class AuthServiceCollectionExtensions
 {
     /// <summary>
-    /// Wires cookie identity plus the OpenFGA-backed authorization policies and handlers.
-    /// ASP.NET decides <em>who you are</em>; every <em>what you may do</em> check defers to OpenFGA.
+    /// Wires cookie identity plus provider-backed authorization policies and handlers.
+    /// ASP.NET decides <em>who you are</em>; every <em>what you may do</em> check defers to the selected provider.
     /// </summary>
     public static IServiceCollection AddAppAuth(this IServiceCollection services)
     {

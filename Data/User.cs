@@ -1,7 +1,7 @@
 namespace FgaPoc.Data;
 
 /// <summary>
-/// Identity + display name only — roles live in OpenFGA, not this table.
+/// Identity + display name only — roles live in the selected authorization provider, not this table.
 /// </summary>
 public sealed record User
 {

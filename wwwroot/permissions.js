@@ -34,13 +34,13 @@ async function renderPermissionBar(containerId) {
 		return;
 	}
 
-	const { user, permissions } = await res.json();
+	const { user, provider, permissions } = await res.json();
 	const buttons = ACTIONS.map((action) => {
 		if (can(permissions, action.permission))
 			return `<a class="btn btn--primary" href="${action.href}">${action.label}</a>`;
 		return `<button class="btn btn--secondary" disabled title="Needs the ${action.permission} permission">${action.label} 🔒</button>`;
 	}).join("");
 
-	el.innerHTML = `<p class="muted">Signed in as <strong>${user}</strong> — buttons reflect the permissions the API returned:</p>
+	el.innerHTML = `<p class="muted">Signed in as <strong>${user}</strong> using <strong>${provider}</strong> — buttons reflect the permissions the API returned:</p>
 		<div class="btn-row">${buttons}</div>`;
 }

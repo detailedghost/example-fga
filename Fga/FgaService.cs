@@ -1,31 +1,24 @@
+using FgaPoc.Authorization;
+using FgaPoc.Data;
+using FgaPoc.Options;
 using OpenFga.Sdk.Client;
 using OpenFga.Sdk.Client.Model;
 
 namespace FgaPoc.Fga;
 
-/// <summary>A blog-level role assignment read back from OpenFGA (e.g. carol → writer).</summary>
-public sealed record RoleAssignment(string Username, string Role);
-
-/// <summary>Permission identifiers in "action:resource" form — what the API hands the frontend.</summary>
-public static class Permissions
-{
-    public const string ReadPosts = "read:posts";
-    public const string CreatePosts = "create:posts";
-    public const string EditPosts = "edit:posts";
-    public const string DeletePosts = "delete:posts";
-    public const string ManageAccess = "manage:access";
-}
-
 /// <summary>
 /// Thin wrapper over <see cref="OpenFgaClient"/> expressing the Trailhead permission
 /// questions in the app's own vocabulary. All authorization decisions flow through here.
 /// </summary>
-public sealed class FgaService(OpenFgaClient client)
+public sealed class FgaService(OpenFgaClient client, AuthorizationProviderOptions provider)
+    : IPermissionService
 {
     public const string BlogObject = "blog:main";
 
-    // The nested blog roles, most to least privileged — used by the admin access page.
-    public static readonly IReadOnlyList<string> Roles = ["admin", "editor", "writer", "reader"];
+    // Self-hosted and Okta-hosted FGA share this client, so the selected provider names it.
+    public string ProviderId => provider.Provider;
+    public string ProviderDisplayName =>
+        provider.Provider == AuthorizationProviders.OktaFga ? "Okta FGA" : "OpenFGA";
 
     public Task<bool> CanCreatePostAsync(string username, CancellationToken ct = default) =>
         CheckAsync(User(username), "writer", BlogObject, ct);
@@ -33,12 +26,13 @@ public sealed class FgaService(OpenFgaClient client)
     public Task<bool> CanManageAccessAsync(string username, CancellationToken ct = default) =>
         CheckAsync(User(username), "admin", BlogObject, ct);
 
-    /// <summary>Whether the user holds (or inherits) the given blog role — used to show the current role.</summary>
-    public Task<bool> HasBlogRoleAsync(
-        string username,
-        string role,
-        CancellationToken ct = default
-    ) => CheckAsync(User(username), role, BlogObject, ct);
+    public async Task<string?> GetHighestRoleAsync(string username, CancellationToken ct = default)
+    {
+        foreach (var role in BlogAuthorizationModel.Roles)
+            if (await CheckAsync(User(username), role, BlogObject, ct))
+                return role;
+        return null;
+    }
 
     /// <summary>
     /// The "action:resource" permissions the user currently holds, resolved from OpenFGA — the API
@@ -48,46 +42,25 @@ public sealed class FgaService(OpenFgaClient client)
     public async Task<IReadOnlyList<string>> GetPermissionsAsync(
         string username,
         CancellationToken ct = default
-    )
-    {
-        var reader = HasBlogRoleAsync(username, "reader", ct);
-        var writer = HasBlogRoleAsync(username, "writer", ct);
-        var editor = HasBlogRoleAsync(username, "editor", ct);
-        var admin = HasBlogRoleAsync(username, "admin", ct);
-        await Task.WhenAll(reader, writer, editor, admin);
-
-        var permissions = new List<string>();
-        if (reader.Result)
-            permissions.Add(Permissions.ReadPosts);
-        if (writer.Result)
-            permissions.Add(Permissions.CreatePosts);
-        if (editor.Result)
-        {
-            permissions.Add(Permissions.EditPosts);
-            permissions.Add(Permissions.DeletePosts);
-        }
-        if (admin.Result)
-            permissions.Add(Permissions.ManageAccess);
-        return permissions;
-    }
+    ) => BlogAuthorizationModel.PermissionsForRole(await GetHighestRoleAsync(username, ct));
 
     public Task<bool> CanReadPostAsync(
         string username,
-        int postId,
+        Post post,
         CancellationToken ct = default
-    ) => CheckAsync(User(username), "can_read", Post(postId), ct);
+    ) => CheckAsync(User(username), "can_read", PostObject(post.Id), ct);
 
     public Task<bool> CanEditPostAsync(
         string username,
-        int postId,
+        Post post,
         CancellationToken ct = default
-    ) => CheckAsync(User(username), "can_edit", Post(postId), ct);
+    ) => CheckAsync(User(username), "can_edit", PostObject(post.Id), ct);
 
     public Task<bool> CanDeletePostAsync(
         string username,
-        int postId,
+        Post post,
         CancellationToken ct = default
-    ) => CheckAsync(User(username), "can_delete", Post(postId), ct);
+    ) => CheckAsync(User(username), "can_delete", PostObject(post.Id), ct);
 
     /// <summary>Grant a blog-level role. Idempotent — an existing tuple is left as-is.</summary>
     public async Task GrantRoleAsync(string username, string role, CancellationToken ct = default)
@@ -130,7 +103,7 @@ public sealed class FgaService(OpenFgaClient client)
         );
         return response
             .Tuples.Select(t => new RoleAssignment(StripPrefix(t.Key.User), t.Key.Relation))
-            .Where(r => Roles.Contains(r.Role))
+            .Where(r => BlogAuthorizationModel.Roles.Contains(r.Role))
             .ToList();
     }
 
@@ -147,13 +120,13 @@ public sealed class FgaService(OpenFgaClient client)
                 {
                     User = BlogObject,
                     Relation = "blog",
-                    Object = Post(postId),
+                    Object = PostObject(postId),
                 },
                 new ClientTupleKey
                 {
                     User = User(ownerUsername),
                     Relation = "owner",
-                    Object = Post(postId),
+                    Object = PostObject(postId),
                 },
             ],
             ct
@@ -173,13 +146,13 @@ public sealed class FgaService(OpenFgaClient client)
                 {
                     User = BlogObject,
                     Relation = "blog",
-                    Object = Post(postId),
+                    Object = PostObject(postId),
                 },
                 new ClientTupleKeyWithoutCondition
                 {
                     User = User(ownerUsername),
                     Relation = "owner",
-                    Object = Post(postId),
+                    Object = PostObject(postId),
                 },
             ],
             ct
@@ -239,13 +212,12 @@ public sealed class FgaService(OpenFgaClient client)
 
     private static void EnsureKnownRole(string role)
     {
-        if (!Roles.Contains(role))
-            throw new ArgumentException($"Unknown role '{role}'", nameof(role));
+        BlogAuthorizationModel.EnsureKnownRole(role);
     }
 
     private static string User(string username) => $"user:{username}";
 
-    private static string Post(int id) => $"post:{id}";
+    private static string PostObject(int id) => $"post:{id}";
 
     private static string StripPrefix(string qualified) =>
         qualified.Contains(':') ? qualified[(qualified.IndexOf(':') + 1)..] : qualified;

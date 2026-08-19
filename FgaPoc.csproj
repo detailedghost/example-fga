@@ -7,10 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AWSSDK.VerifiedPermissions" Version="4.0.100.5" />
     <PackageReference Include="Dapper" Version="2.1.79" />
     <PackageReference Include="DotNetEnv" Version="3.2.0" />
     <PackageReference Include="Npgsql" Version="10.0.3" />
     <PackageReference Include="OpenFga.Sdk" Version="0.10.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="tests/**/*.cs" />
   </ItemGroup>
 
 </Project>

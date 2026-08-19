@@ -1,4 +1,4 @@
-using FgaPoc.Fga;
+using FgaPoc.Authorization;
 
 namespace FgaPoc.Endpoints;
 
@@ -9,7 +9,7 @@ public static class MeEndpoints
     {
         app.MapGet(
                 "/api/me",
-                async (HttpContext http, FgaService fga) =>
+                async (HttpContext http, IPermissionService permissions) =>
                 {
                     var username = http.User.Identity?.Name;
                     if (username is null)
@@ -19,7 +19,8 @@ public static class MeEndpoints
                         new
                         {
                             user = username,
-                            permissions = await fga.GetPermissionsAsync(username),
+                            provider = permissions.ProviderId,
+                            permissions = await permissions.GetPermissionsAsync(username),
                         }
                     );
                 }

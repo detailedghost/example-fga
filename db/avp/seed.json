@@ -1,0 +1,7 @@
+[
+	{ "username": "alice", "role": "admin" },
+	{ "username": "bob", "role": "editor" },
+	{ "username": "carol", "role": "writer" },
+	{ "username": "dave", "role": "reader" },
+	{ "username": "erin", "role": "writer" }
+]

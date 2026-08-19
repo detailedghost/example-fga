@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FgaPoc.Endpoints;
 
-/// <summary>Login/logout — cookie identity only. Authorization is decided later by OpenFGA.</summary>
+/// <summary>Login/logout — cookie identity only. Authorization is decided later by the selected provider.</summary>
 public static class AuthEndpoints
 {
     public static void MapAuthEndpoints(this IEndpointRouteBuilder app)
@@ -24,7 +24,7 @@ public static class AuthEndpoints
                     if (user is null || user.Password != password)
                         return Results.Redirect("/Login?error=1");
 
-                    // Name claim becomes the FGA subject (user:{username}); display name is for the UI.
+                    // The Name claim becomes the authorization principal; display name is for the UI.
                     var claims = new List<Claim>
                     {
                         new(ClaimTypes.Name, user.Username),

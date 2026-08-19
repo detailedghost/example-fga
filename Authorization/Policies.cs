@@ -10,7 +10,7 @@ public static class Policies
     public const string CanManageAccess = "CanManageAccess";
 }
 
-/// <summary>Per-post operations, authorized against a <see cref="Data.Post"/> resource via OpenFGA.</summary>
+/// <summary>Per-post operations, authorized against a <see cref="Data.Post"/> resource.</summary>
 public static class PostOperations
 {
     public static readonly OperationAuthorizationRequirement Read = new() { Name = "post:read" };

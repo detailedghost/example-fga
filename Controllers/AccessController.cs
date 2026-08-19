@@ -1,6 +1,5 @@
 using FgaPoc.Authorization;
 using FgaPoc.Data;
-using FgaPoc.Fga;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,12 +12,13 @@ namespace FgaPoc.Controllers;
 [ApiController]
 [Route("mvc/access")]
 [Authorize(Policy = Policies.CanManageAccess)]
-public sealed class AccessController(UserRepository users, FgaService fga) : ControllerBase
+public sealed class AccessController(UserRepository users, IPermissionService permissions)
+    : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetMatrix(CancellationToken ct)
     {
-        var directRolesByUser = (await fga.ReadRoleAssignmentsAsync(ct))
+        var directRolesByUser = (await permissions.ReadRoleAssignmentsAsync(ct))
             .GroupBy(a => a.Username)
             .ToDictionary(g => g.Key, g => g.Select(a => a.Role).ToArray());
 
@@ -27,7 +27,8 @@ public sealed class AccessController(UserRepository users, FgaService fga) : Con
             new
             {
                 currentUser = User.Identity?.Name,
-                roles = FgaService.Roles,
+                provider = permissions.ProviderId,
+                roles = BlogAuthorizationModel.Roles,
                 users = all.Select(u => new
                 {
                     username = u.Username,
@@ -45,7 +46,7 @@ public sealed class AccessController(UserRepository users, FgaService fga) : Con
         CancellationToken ct
     )
     {
-        await fga.GrantRoleAsync(username, role, ct);
+        await permissions.GrantRoleAsync(username, role, ct);
         return NoContent();
     }
 
@@ -56,7 +57,7 @@ public sealed class AccessController(UserRepository users, FgaService fga) : Con
         CancellationToken ct
     )
     {
-        await fga.RevokeRoleAsync(username, role, ct);
+        await permissions.RevokeRoleAsync(username, role, ct);
         return NoContent();
     }
 }

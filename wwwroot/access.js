@@ -1,8 +1,9 @@
-// Framework-free frontend for the OpenFGA role matrix.
+// Framework-free frontend for the selected provider's role matrix.
 // Reads state from GET /api/access; toggles call the same grant/revoke endpoints the app uses.
 
 const statusEl = document.getElementById("status");
 const gridEl = document.getElementById("grid");
+const providerEl = document.getElementById("provider");
 
 function showStatus(message, kind) {
 	statusEl.textContent = message;
@@ -31,6 +32,7 @@ async function load() {
 }
 
 function render(data) {
+	providerEl.textContent = `Active provider: ${data.provider}`;
 	const header = data.roles.map((role) => `<th>${role}</th>`).join("");
 	const rows = data.users
 		.map((user) => {
@@ -80,7 +82,7 @@ async function onToggle(event) {
 			`${grant ? "Granted" : "Revoked"} ${role} for ${username}.`,
 			"success",
 		);
-		await load(); // re-read the authoritative state from OpenFGA
+		await load(); // re-read the authoritative state from the selected provider
 	} catch {
 		showStatus(`Could not update ${role} for ${username}.`, "danger");
 		toggle.checked = !grant;
